@@ -1,6 +1,7 @@
 // Copyright 2019 Kaganov Dmitryi
 // Radix sort with simple merge (int)
 #include <omp.h>
+#include <ctime>
 #include <cmath>
 #include <utility>
 #include <iostream>
