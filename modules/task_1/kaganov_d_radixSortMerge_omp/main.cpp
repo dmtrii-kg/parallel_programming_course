@@ -5,12 +5,6 @@
 #include <utility>
 #include <iostream>
 
-void swap(unsigned int *A, unsigned int *B) {
-    unsigned int tmp = *A;
-    *A = *B;
-    *B = tmp;
-}
-
 unsigned int *sortMerge(unsigned int *firstArray, int firstSize,
                         unsigned int *secondArray, int secondSize) {
     unsigned int *array = new unsigned int[firstSize + secondSize];
@@ -40,7 +34,7 @@ void lsdSort(unsigned int* A, unsigned int count) {
     unsigned int* B = new unsigned int[count];
     unsigned int index[4][256] = { 0 };
     unsigned int x, y, z;
-    for (int i = 0; i < count; i++) {
+    for (unsigned int i = 0; i < count; i++) {
         x = A[i];
         for (int j = 0; j < 4; j++) {
             index[j][static_cast<int>(x & 0xff)]++;
@@ -56,12 +50,12 @@ void lsdSort(unsigned int* A, unsigned int count) {
         }
     }
     for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < count; j++) {
+        for (unsigned int j = 0; j < count; j++) {
             x = A[j];
             y = static_cast<int>(x >> (i << 3)) & 0xff;
             B[index[i][y]++] = x;
         }
-        swap(A, B);
+        std::swap(A, B);
     }
     delete[] B;
 }
@@ -76,7 +70,7 @@ void printArray(unsigned int *array, int size) {
 }
 
 void check(unsigned int* R, unsigned int size) {
-    for (int i = 0; i < size - 1; i++) {
+    for (unsigned int i = 0; i < size - 1; i++) {
         if (R[i] > R[i + 1]) {
             std::cout << "\nError! Array not sorted!\n";
             return;
@@ -114,7 +108,7 @@ int main(int argc, char** argv) {
     buff = new unsigned int[size];
     lastBuff = new unsigned int[arrSize % size];
 
-    for (int i = 0; i < arrSize; i++)
+    for (unsigned int i = 0; i < arrSize; i++)
         A[i] = std::rand() % 200;
 
     std::cout << "\nInput array:\n";
@@ -122,10 +116,10 @@ int main(int argc, char** argv) {
 
     // RADIX SORT
     timeSort = clock();
-    for (int i = 0; i < arrSize; i += (size)) {
+    for (unsigned int i = 0; i < arrSize; i += (size)) {
         // merge for remainder
         if ((i == arrSize - arrSize % size) && (arrSize % mergeNum != 0)) {
-            for (int j = i, k = 0; j < i + (arrSize % size); j++, k++)
+            for (unsigned int j = i, k = 0; j < i + (arrSize % size); j++, k++)
                 lastBuff[k] = A[j];
 
             lsdSort(lastBuff, arrSize % size);
