@@ -32,7 +32,7 @@ unsigned int *sortMerge(unsigned int *firstArray, int firstSize,
 
 void lsdSort(unsigned int* A, unsigned int count) {
     unsigned int* B = new unsigned int[count];
-    unsigned int index[4][256] = { 0 };
+    unsigned int index[4][256] = { {0} };
     unsigned int x, y, z;
     for (unsigned int i = 0; i < count; i++) {
         x = A[i];
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
 
         // merge for without remainder
         } else {
-            for (int j = i, k = 0; j < i + size; j++, k++)
+            for (unsigned int j = i, k = 0; j < i + size; j++, k++)
                 buff[k] = A[j];
 
             lsdSort(buff, size);
