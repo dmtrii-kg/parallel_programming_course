@@ -99,8 +99,8 @@ int main(int argc, char** argv) {
     }
 
     // rounding for proper array division
-    int size = ceil(static_cast<double>(arrSize) / static_cast<double>(mergeNum));
-    // std::cout << size << std::endl;
+    int size = (static_cast<int>(arrSize) + static_cast<int>(mergeNum) - 1) / static_cast<int>(mergeNum);
+    std::cout << size << std::endl;
 
     std::cout << "\nArray size : " << arrSize << std::endl;
     std::cout << "Number of divisions : " << mergeNum << std::endl;
