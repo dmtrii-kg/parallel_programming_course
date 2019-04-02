@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     lastBuff = new unsigned int[arrSize % size];
 
     for (unsigned int i = 0; i < arrSize; i++)
-        A[i] = std::rand() % 200;
+        A[i] = std::rand() % 100000 + 100000;
 
     std::cout << "\nInput array:\n";
     printArray(A, arrSize);
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
                 lastBuff[k] = A[j];
 
             lsdSort(lastBuff, arrSize % size);
-            printArray(lastBuff, arrSize % size);
+            // printArray(lastBuff, arrSize % size);
             R = sortMerge(R, i, lastBuff, arrSize % size);
 
         // merge for without remainder
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
                 buff[k] = A[j];
 
             lsdSort(buff, size);
-            printArray(buff, size);
+            // printArray(buff, size);
 
             // if the  buff is first, then it is placed in the resulting (R)
             if (i == 0) {
