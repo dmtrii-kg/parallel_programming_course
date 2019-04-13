@@ -238,7 +238,7 @@ int main(int argc, char** argv) {
     for (unsigned int i = 0; i < arrSize; i++)
         inputArray[i] = std::rand() % rank + rank;
 
-    std::cout << "\nInput array: \n";
+    std::cout << "\nInput array:\n";
     printArray(inputArray, arrSize);
 
 // LINEAR BLOCK
