@@ -66,7 +66,7 @@ void lsdSortParallel(unsigned int* A, unsigned int count, const int numThreads) 
     unsigned int index[4][256] = { {0} };
     unsigned int x, y, z;
     omp_set_num_threads(numThreads);
-    #pragma parallel
+    #pragma omp parallel
     {
         #pragma omp for
         for (unsigned int i = 0; i < count; i++) {
@@ -122,7 +122,7 @@ unsigned int* radixSortLinear(unsigned int* A, unsigned int arrSize, int size, i
 
             // if the  buff is first, then it is placed in the resulting (R)
             if (i == 0) {
-                for (unsigned int j = 0; j < size; j++) {
+                for (int j = 0; j < size; j++) {
                     R[j] = buff[j];
                 }
             } else {                                        // for further merging with him
@@ -162,7 +162,7 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
 
             // if the  buff is first, then it is placed in the resulting (R)
             if (i == 0) {
-                for (unsigned int j = 0; j < size; j++) {
+                for (int j = 0; j < size; j++) {
                     R[j] = buff[j];
                 }
             } else {                                        // for further merging with him
