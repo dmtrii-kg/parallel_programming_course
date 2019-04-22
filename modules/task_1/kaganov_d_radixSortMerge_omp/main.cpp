@@ -134,7 +134,6 @@ int main(int argc, char** argv) {
 
             lsdSort(buff, size);
             printArray(buff, size);
-
             // if the  buff is first, then it is placed in the resulting (R)
             if (i == 0) {
                 for (int j = 0; j < size; j++) {
