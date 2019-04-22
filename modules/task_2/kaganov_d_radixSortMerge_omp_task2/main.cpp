@@ -139,7 +139,7 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
             r2[j] = j * size * 2 + size * 2 - 1;;
         }
         r2[block - 1] = arrSize - 1;
-        #pragma omp parallel for schedule(dynamic, 1) private(tid)
+        #pragma omp parallel for schedule(dynamic, 1)
         for (int i = 0; i < block; i++) {
             unsigned int* tmp = new unsigned int[r1[i] - l1[i] + 1 + r2[i] - l2[i] + 1];
             tmp = sortMerge(R + l1[i], r1[i] - l1[i] + 1, R + l2[i], r2[i] - l2[i] + 1);
