@@ -1,4 +1,4 @@
-set(PROJECT_NAME "kaganov_d_radixSortMerge_omp_task2")
+set(PROJECT_NAME "kaganov_d_radixSortMerge_task2_omp")
 
 if ( USE_OMP )
     project( ${PROJECT_NAME} )
