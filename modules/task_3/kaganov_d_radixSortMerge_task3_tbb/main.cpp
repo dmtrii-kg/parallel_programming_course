@@ -1,12 +1,10 @@
-// Copyright 2019 Dmitryi Kaganov
+// Copyright 2019 Kaganov Dmitryi
 // Radix sort with simple merge (int)
-#include <cmath>
+#include <tbb/tbb.h>
 #include <ctime>
+#include <cmath>
 #include <utility>
 #include <iostream>
-#include "tbb/task_scheduler_init.h"
-#include "tbb/parallel_for.h"
-#include "tbb/blocked_range.h"
 
 unsigned int *sortMerge(unsigned int *firstArray, int firstSize,
                         unsigned int *secondArray, int secondSize) {
@@ -103,7 +101,6 @@ unsigned int* radixSortLinear(unsigned int* A, unsigned int arrSize, int size, i
 }
 
 unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size, int mergeNum, int numThreads) {
-    tbb::task_scheduler_init init(numThreads);
     // pointless copy array A
     unsigned int* R = new unsigned int[arrSize];
     for (unsigned int i = 0; i < arrSize; i++)
@@ -118,6 +115,7 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
         sizeArr[mergeNum - 1] = remainder;
     }
 
+    tbb::task_scheduler_init init(numThreads);
     tbb::parallel_for(tbb::blocked_range<int>(0, numThreads), [=, &A](const tbb::blocked_range<int> &thread) {
         for (int i = thread.begin(); i != thread.end(); i++)
             lsdSort(R + i * size, sizeArr[i]);
@@ -156,7 +154,6 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
                 delete[] tmp;
             }});
         init.terminate();
-        }
     }
     return R;
     delete[] R;
@@ -194,7 +191,7 @@ void checkResult(unsigned int* linearResult, unsigned int* parallelResult, unsig
 
 int main(int argc, char** argv) {
     std::srand(static_cast<int>(time(NULL)));
-    const int numThreads = 32;
+    const int numThreads = 4;
     int rank = 1000;
     int mergeNum = 0;                   // number of mergers
     unsigned int arrSize = 0;           // array size
