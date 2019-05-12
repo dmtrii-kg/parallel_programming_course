@@ -116,7 +116,7 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
     }
 
     tbb::task_scheduler_init init(numThreads);
-    tbb::parallel_for(tbb::blocked_range<int>(0, numThreads), [=, &A](const tbb::blocked_range<int> &thread) {
+    tbb::parallel_for(tbb::blocked_range<int>(0, numThreads), [=, &R](const tbb::blocked_range<int> &thread) {
         for (int i = thread.begin(); i != thread.end(); i++)
             lsdSort(R + i * size, sizeArr[i]);
     });
@@ -142,7 +142,7 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
         }
         r2[block - 1] = arrSize - 1;
         init.initialize(block);
-        tbb::parallel_for(tbb::blocked_range<int>(0, block), [=, &A](const tbb::blocked_range<int> &thread) {
+        tbb::parallel_for(tbb::blocked_range<int>(0, block), [=, &R](const tbb::blocked_range<int> &thread) {
             for (int i = thread.begin(); i != thread.end(); i++) {
                 unsigned int* tmp = new unsigned int[r1[i] - l1[i] + 1 + r2[i] - l2[i] + 1];
                 tmp = sortMerge(R + l1[i], r1[i] - l1[i] + 1, R + l2[i], r2[i] - l2[i] + 1);
