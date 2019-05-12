@@ -1,10 +1,12 @@
-// Copyright 2019 Kaganov Dmitryi
+// Copyright 2019 Dmitryi Kaganov
 // Radix sort with simple merge (int)
-#include <omp.h>
-#include <ctime>
 #include <cmath>
+#include <ctime>
 #include <utility>
 #include <iostream>
+#include "tbb/task_scheduler_init.h"
+#include "tbb/parallel_for.h"
+#include "tbb/blocked_range.h"
 
 unsigned int *sortMerge(unsigned int *firstArray, int firstSize,
                         unsigned int *secondArray, int secondSize) {
@@ -101,6 +103,7 @@ unsigned int* radixSortLinear(unsigned int* A, unsigned int arrSize, int size, i
 }
 
 unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size, int mergeNum, int numThreads) {
+    tbb::task_scheduler_init init(numThreads);
     // pointless copy array A
     unsigned int* R = new unsigned int[arrSize];
     for (unsigned int i = 0; i < arrSize; i++)
@@ -115,10 +118,11 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
         sizeArr[mergeNum - 1] = remainder;
     }
 
-    omp_set_num_threads(numThreads);
-    #pragma omp parallel for schedule(dynamic, 1)
-    for (int i = 0; i < mergeNum; i++)
-        lsdSort(R + i * size, sizeArr[i]);
+    tbb::parallel_for(tbb::blocked_range<int>(0, numThreads), [=, &A](const tbb::blocked_range<int> &thread) {
+        for (int i = thread.begin(); i != thread.end(); i++)
+            lsdSort(R + i * size, sizeArr[i]);
+    });
+    init.terminate();
 
     int counter = static_cast<int>(std::log(mergeNum) / std::log(2));
 
@@ -139,16 +143,19 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
             r2[j] = j * size * 2 + size * 2 - 1;;
         }
         r2[block - 1] = arrSize - 1;
-        #pragma omp parallel for schedule(dynamic, 1)
-        for (int i = 0; i < block; i++) {
-            unsigned int* tmp = new unsigned int[r1[i] - l1[i] + 1 + r2[i] - l2[i] + 1];
-            tmp = sortMerge(R + l1[i], r1[i] - l1[i] + 1, R + l2[i], r2[i] - l2[i] + 1);
-            int j = l1[i], g = 0;
-            while (j <= r2[i]) {
-                R[j] = tmp[g++];
-                j++;
-            }
-            delete[] tmp;
+        init.initialize(block);
+        tbb::parallel_for(tbb::blocked_range<int>(0, block), [=, &A](const tbb::blocked_range<int> &thread) {
+            for (int i = thread.begin(); i != thread.end(); i++) {
+                unsigned int* tmp = new unsigned int[r1[i] - l1[i] + 1 + r2[i] - l2[i] + 1];
+                tmp = sortMerge(R + l1[i], r1[i] - l1[i] + 1, R + l2[i], r2[i] - l2[i] + 1);
+                int j = l1[i], g = 0;
+                while (j <= r2[i]) {
+                    R[j] = tmp[g++];
+                    j++;
+                }
+                delete[] tmp;
+            }});
+        init.terminate();
         }
     }
     return R;
@@ -187,14 +194,15 @@ void checkResult(unsigned int* linearResult, unsigned int* parallelResult, unsig
 
 int main(int argc, char** argv) {
     std::srand(static_cast<int>(time(NULL)));
-    const int numThreads = 8;
+    const int numThreads = 32;
     int rank = 1000;
     int mergeNum = 0;                   // number of mergers
     unsigned int arrSize = 0;           // array size
     unsigned int* inputArray = NULL;
     unsigned int* linearResult = NULL;
     unsigned int* parallelResult = NULL;
-    double t1, t2, pt1, pt2;
+    double linearTime, parallelTime;
+    tbb::tick_count t1, t2;
 
     if (argc > 2) {
         arrSize = atoi(argv[1]);
@@ -221,29 +229,32 @@ int main(int argc, char** argv) {
     printArray(inputArray, arrSize);
 
 // LINEAR BLOCK
-    t1 = omp_get_wtime();
+    t1 = tbb::tick_count::now();
     linearResult = radixSortLinear(inputArray, arrSize, size, mergeNum);
-    t2 = omp_get_wtime();
+    t2 = tbb::tick_count::now();
+    linearTime = (t2 - t1).seconds();
 
     std::cout << "\nSorted array:\n";
     printArray(linearResult, arrSize);
     check(linearResult, arrSize);
-    std::cout << "Time: " << t2 - t1 << std::endl;
+    std::cout << "Linear time: " << linearTime << std::endl;
 // END LINEAR BLOCK
 
 // PARALLEL BLOCK
-    pt1 = omp_get_wtime();
+    t1 = tbb::tick_count::now();
     parallelResult = radixSortParallel(inputArray, arrSize, size, mergeNum, numThreads);
-    pt2 = omp_get_wtime();
+    t2 = tbb::tick_count::now();
+    parallelTime = (t2 - t1).seconds();
 
     std::cout << "\nSorted array:\n";
     printArray(parallelResult, arrSize);
     check(parallelResult, arrSize);
-    std::cout << "Time: " << pt2 - pt1 << std::endl;
+    std::cout << "Parallel time: " << parallelTime << std::endl;
 // END PARALLEL BLOCK
 
     checkResult(linearResult, parallelResult, arrSize);
-    std::cout << "Average acceleration: " << (t2 - t1) / (pt2 - pt1) << std::endl;
+    std::cout << "Average acceleration: " << linearTime / parallelTime << std::endl;
+    std::cout << "Performance: " << (linearTime / parallelTime) / numThreads << std::endl;
 
     delete[] inputArray;
     delete[] linearResult;
