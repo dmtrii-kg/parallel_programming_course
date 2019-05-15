@@ -117,8 +117,8 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
         sizeArr[mergeNum - 1] = remainder;
     }
 
-    tbb::parallel_for(tbb::blocked_range<int>(0, numThreads), [=, &R](const tbb::blocked_range<int> &thread) {
-        for (int i = thread.begin(); i != thread.end(); i++)
+    tbb::parallel_for(tbb::blocked_range<int>(0, mergeNum), [=, &R](const tbb::blocked_range<int> &thrds) {
+        for (int i = thrds.begin(); i != thrds.end(); i++)
             lsdSort(R + i * size, sizeArr[i]);
     });
     init.terminate();
@@ -143,8 +143,8 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
         }
         r2[block - 1] = arrSize - 1;
         init.initialize(block);
-        tbb::parallel_for(tbb::blocked_range<int>(0, block), [=, &R](const tbb::blocked_range<int> &thread) {
-            for (int i = thread.begin(); i != thread.end(); i++) {
+        tbb::parallel_for(tbb::blocked_range<int>(0, block), [=, &R](const tbb::blocked_range<int> &thrds) {
+            for (int i = thrds.begin(); i != thrds.end(); i++) {
                 unsigned int* tmp = new unsigned int[r1[i] - l1[i] + 1 + r2[i] - l2[i] + 1];
                 tmp = sortMerge(R + l1[i], r1[i] - l1[i] + 1, R + l2[i], r2[i] - l2[i] + 1);
                 int j = l1[i], g = 0;
@@ -192,7 +192,7 @@ void checkResult(unsigned int* linearResult, unsigned int* parallelResult, unsig
 
 int main(int argc, char** argv) {
     std::srand(static_cast<int>(time(NULL)));
-    const int numThreads = 4;
+    const int numThreads = 16;
     int rank = 1000;
     int mergeNum = 0;                   // number of mergers
     unsigned int arrSize = 0;           // array size
