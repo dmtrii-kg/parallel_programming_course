@@ -116,7 +116,7 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
     }
 
     omp_set_num_threads(numThreads);
-    #pragma omp parallel for schedule(dynamic, 1)
+    #pragma omp parallel for schedule(static, 1)
     for (int i = 0; i < mergeNum; i++)
         lsdSort(R + i * size, sizeArr[i]);
 
@@ -139,7 +139,7 @@ unsigned int* radixSortParallel(unsigned int* A, unsigned int arrSize, int size,
             r2[j] = j * size * 2 + size * 2 - 1;;
         }
         r2[block - 1] = arrSize - 1;
-        #pragma omp parallel for schedule(dynamic, 1)
+        #pragma omp parallel for schedule(static, 1)
         for (int i = 0; i < block; i++) {
             unsigned int* tmp = new unsigned int[r1[i] - l1[i] + 1 + r2[i] - l2[i] + 1];
             tmp = sortMerge(R + l1[i], r1[i] - l1[i] + 1, R + l2[i], r2[i] - l2[i] + 1);
@@ -187,8 +187,8 @@ void checkResult(unsigned int* linearResult, unsigned int* parallelResult, unsig
 
 int main(int argc, char** argv) {
     std::srand(static_cast<int>(time(NULL)));
-    const int numThreads = 8;
-    int rank = 1000;
+    int numThreads = 16;
+    int rank = 1000000;
     int mergeNum = 0;                   // number of mergers
     unsigned int arrSize = 0;           // array size
     unsigned int* inputArray = NULL;
@@ -196,12 +196,14 @@ int main(int argc, char** argv) {
     unsigned int* parallelResult = NULL;
     double t1, t2, pt1, pt2;
 
-    if (argc > 2) {
+    if (argc > 3) {
         arrSize = atoi(argv[1]);
         mergeNum = atoi(argv[2]);
+        numThreads = atoi(argv[3]);
     } else {
         arrSize = 10;
         mergeNum = 2;
+        numThreads = 2;
     }
 
     // rounding for proper array division
@@ -215,7 +217,9 @@ int main(int argc, char** argv) {
     parallelResult = new unsigned int[arrSize];
 
     for (unsigned int i = 0; i < arrSize; i++)
-        inputArray[i] = std::rand() % rank + rank;
+        inputArray[i] = std::rand() % rank;
+    
+    std::sort(inputArray, inputArray + arrSize, [](unsigned int x, unsigned int y) { return x>y; });
 
     std::cout << "\nInput array: \n";
     printArray(inputArray, arrSize);
@@ -228,7 +232,7 @@ int main(int argc, char** argv) {
     std::cout << "\nSorted array:\n";
     printArray(linearResult, arrSize);
     check(linearResult, arrSize);
-    std::cout << "Time: " << t2 - t1 << std::endl;
+    std::cout << "Linear time: " << t2 - t1 << std::endl;
 // END LINEAR BLOCK
 
 // PARALLEL BLOCK
@@ -239,11 +243,12 @@ int main(int argc, char** argv) {
     std::cout << "\nSorted array:\n";
     printArray(parallelResult, arrSize);
     check(parallelResult, arrSize);
-    std::cout << "Time: " << pt2 - pt1 << std::endl;
+    std::cout << "Parallel time: " << pt2 - pt1 << std::endl;
 // END PARALLEL BLOCK
 
     checkResult(linearResult, parallelResult, arrSize);
     std::cout << "Average acceleration: " << (t2 - t1) / (pt2 - pt1) << std::endl;
+    std::cout << "Efficiency: " << ((t2 - t1) / (pt2 - pt1)) / numThreads << std::endl;
 
     delete[] inputArray;
     delete[] linearResult;
