@@ -192,8 +192,8 @@ void checkResult(unsigned int* linearResult, unsigned int* parallelResult, unsig
 
 int main(int argc, char** argv) {
     std::srand(static_cast<int>(time(NULL)));
-    const int numThreads = 16;
-    int rank = 1000;
+    int numThreads = 16;
+    int rank = 1000000;
     int mergeNum = 0;                   // number of mergers
     unsigned int arrSize = 0;           // array size
     unsigned int* inputArray = NULL;
@@ -202,14 +202,16 @@ int main(int argc, char** argv) {
     double linearTime, parallelTime;
     tbb::tick_count t1, t2;
 
-    if (argc > 2) {
+    if (argc > 3) {
         arrSize = atoi(argv[1]);
         mergeNum = atoi(argv[2]);
+        numThreads = atoi(argv[3]);
     } else {
         arrSize = 10;
         mergeNum = 2;
+        numThreads = 2;
     }
-
+    
     // rounding for proper array division
     int size = (static_cast<int>(arrSize) + static_cast<int>(mergeNum) - 1) / static_cast<int>(mergeNum);
 
@@ -221,7 +223,9 @@ int main(int argc, char** argv) {
     parallelResult = new unsigned int[arrSize];
 
     for (unsigned int i = 0; i < arrSize; i++)
-        inputArray[i] = std::rand() % rank + rank;
+        inputArray[i] = std::rand() % rank;
+    
+    std::sort(inputArray, inputArray + arrSize, [](unsigned int x, unsigned int y) { return x>y; });
 
     std::cout << "\nInput array: \n";
     printArray(inputArray, arrSize);
@@ -252,7 +256,7 @@ int main(int argc, char** argv) {
 
     checkResult(linearResult, parallelResult, arrSize);
     std::cout << "Average acceleration: " << linearTime / parallelTime << std::endl;
-    std::cout << "Performance: " << (linearTime / parallelTime) / numThreads << std::endl;
+    std::cout << "Efficiency: " << (linearTime / parallelTime) / numThreads << std::endl;
 
     delete[] inputArray;
     delete[] linearResult;
